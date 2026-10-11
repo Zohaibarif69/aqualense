@@ -1,0 +1,27 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/services";
+import { measurementsApi, sensorsApi } from "@/services/sensors";
+import type { ObservationQuery, Role } from "@/types";
+
+export const useUser = () => useQuery({ queryKey: ["user"], queryFn: () => api.auth.current() });
+export const useSwitchRole = () => { const qc = useQueryClient(); return useMutation({ mutationFn: (r: Role | { role: Role; passcode?: string }) => (typeof r === "string" ? api.auth.switchRole(r) : api.auth.switchRole(r.role, r.passcode)), onSuccess: () => qc.invalidateQueries() }); };
+export const useObservations = (q: ObservationQuery = {}) => useQuery({ queryKey: ["observations", q], queryFn: () => api.observations.list(q) });
+export const useObservation = (id?: string) => useQuery({ queryKey: ["observation", id], queryFn: () => api.observations.getById(id!), enabled: !!id, retry: false });
+export const usePhotos = (ids: string[] = []) => useQuery({ queryKey: ["photos", ids], queryFn: () => api.observations.photos(ids), enabled: ids.length > 0 });
+export const useTimeline = (id?: string) => useQuery({ queryKey: ["timeline", id], queryFn: () => api.observations.timeline(id!), enabled: !!id });
+export const useAnalysis = (id?: string) => useQuery({ queryKey: ["analysis", id], queryFn: () => api.ai.getForObservation(id!), enabled: !!id });
+export const useSites = () => useQuery({ queryKey: ["sites"], queryFn: () => api.sites.list(), staleTime: 60_000 });
+export const useSite = (id?: string) => useQuery({ queryKey: ["site", id], queryFn: () => api.sites.getById(id!), enabled: !!id, retry: false });
+export const useIndicators = (siteId?: string) => useQuery({ queryKey: ["indicators", siteId], queryFn: () => api.environment.indicators(siteId!), enabled: !!siteId, retry: false });
+export const useForecast = (siteId?: string) => useQuery({ queryKey: ["forecast", siteId], queryFn: () => api.environment.forecast(siteId!), enabled: !!siteId, retry: false });
+export const useReviews = () => useQuery({ queryKey: ["reviews"], queryFn: () => api.reviews.list() });
+export const useReview = (obsId?: string) => useQuery({ queryKey: ["review", obsId], queryFn: () => api.reviews.getForObservation(obsId!), enabled: !!obsId });
+export const useNotifications = () => useQuery({ queryKey: ["notifications"], queryFn: () => api.notifications.list() });
+export const useAnalysisHistory = (id?: string) => useQuery({ queryKey: ["analysis-history", id], queryFn: () => api.ai.history(id!), enabled: !!id });
+export const useAudit = (id?: string) => useQuery({ queryKey: ["audit", id], queryFn: () => api.audit.list(id!), enabled: !!id, retry: false });
+export const useDischargeHistory = (siteId?: string) => useQuery({ queryKey: ["discharge-history", siteId], queryFn: () => api.environment.history(siteId!), enabled: !!siteId });
+export const useSensors = () => useQuery({ queryKey: ["sensors"], queryFn: () => sensorsApi.list() });
+export const useSensorReadings = (id?: string) => useQuery({ queryKey: ["sensor-readings", id], queryFn: () => sensorsApi.readings(id!), enabled: !!id, refetchInterval: 15_000 });
+export const useSensorAlerts = () => useQuery({ queryKey: ["sensor-alerts"], queryFn: () => sensorsApi.alerts(), refetchInterval: 30_000 });
+export const useSiteMeasurements = (siteId?: string, days = 90) => useQuery({ queryKey: ["site-measurements", siteId, days], queryFn: () => measurementsApi.forSite(siteId!, days), enabled: !!siteId, staleTime: 60_000 });
+export const useInvalidateAll = () => { const qc = useQueryClient(); return () => qc.invalidateQueries(); };
